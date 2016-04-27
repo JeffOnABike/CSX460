@@ -1,0 +1,259 @@
+---
+title: "03-exercises"
+author: "Jeff Larson"
+date: "April 20, 2016"
+output: html_document
+---
+
+## Readings
+
+***APM***
+
+- Chapter 4 "Over Fitting and Model Tuning"
+- Chapter 12.2 "Logisitic Regression""
+
+
+## Miscellaneous
+
+I am still struggling with names ...
+
+- Please send me your picture
+
+
+## Assignment 
+
+Note: The following will set-up your environment for this exercise. If you get an error stating that the packages have not been found, you need to install those packages.
+
+
+```{r,echo=FALSE, warning=FALSE, message=FALSE}
+
+packs <-  c('AppliedPredictiveModeling', 'ggplot2', 'magrittr', 'dplyr', 'caret')
+
+for( nm in packs ) { 
+  # message(nm)
+  if( ! nm  %in% installed.packages()[,1]  ) install.packages(nm)
+  library(nm, character.only = TRUE)
+}
+
+# Load data set into environment
+data(FuelEconomy)     # See ?cars2010
+fe <- dplyr::bind_rows(cars2010, cars2011, cars2012)    # Define Da
+
+
+data("GermanCredit")  # see GermanCredit
+
+... = NULL  # Needed for aesthetics 
+
+```
+
+
+## StepAIC
+
+
+Using Fuel Economy data set from the **AppliedPredictiveModeling** Package.
+- fit the simplest possible model using lm
+- Use MASS::StepAIC to improve the model using forward stepwise regression
+- Fit the "full" model using lm
+- USe MASS::StepAIC to improve the model using backward stepwise regression 
+
+```{r}
+
+library(MASS)
+
+# Load data
+data(FuelEconomy)     
+fe <- rbind(cars2010, cars2011, cars2012)
+
+form <- FE ~  EngDispl + NumCyl + Transmission + AirAspirationMethod + NumGears + TransLockup + TransCreeperGear + DriveDesc + IntakeValvePerCyl + ExhaustValvesPerCyl + CarlineClassDesc + VarValveTiming + VarValveLift
+
+# fit everything
+fit.fe <- lm( FE ~ . , data = fe )
+summary(fit.fe)
+
+# fit simplest
+fit.simple <- lm( FE ~ 1, data=fe )
+
+# fit forward stepAIC
+fit.forward <- stepAIC(fit.simple, scope = form , direction = "forward")
+summary(fit.forward)
+
+# fit backward
+fit.fe.backward <- stepAIC(fit.fe, scope = FE ~ 1, direction="backward")
+summary(fit.fe.backward)
+```
+
+- Are they the same model? If not why?  Which is better?
+
+No, the forward stepwise fit has 41 predictors and adj. R^2 about .8138, fit backward has 44 predictors and adj. R^2 of .8141
+
+The better is probably the simpler one, considering very similar R^2 metrics, but the real decision of model selection would be after cross-validating the models.
+
+
+## Logsitic and Inverse Logistic Transformation 
+
+- Write an R function for the logistic function. The function should accept a `numeric` vector with values `[-Inf,Inf]` and produce a numeric vector in the the range `[0,1]`.
+
+- Plot the logistic function from  `[-10,10]`
+
+- Write a R function for the inverse logistic function. The function should accept a `numeric` vector with values `[0,1]` and prodcuce a numeric vector in the range `[-Inf,Inf]`
+
+- Plot the Inverse Logistic function from `[0,1]`
+
+
+**Hint:** For plotting curves see `?graphics::curve` or `?ggplot2::stat_function`
+
+
+```{r}
+
+logistic <- function(x) { 
+  1/(1+exp(-x))
+}
+
+input <- -10:10
+qplot(x = input, y = logistic(input)) + geom_line()
+
+logistic_inv <- function(y) { 
+ -log((1-y)/y)
+}
+
+input <- seq(from = 0, to = 1, by = .05)
+qplot(x = input, y =logistic_inv(input)) + geom_line()
+
+```
+
+**NOTE"** These functions are quite handy, in evaluating logistic regression results. You may want to save these functions in your own package.  
+
+```{r}
+# DO NOT EDIT
+c(-Inf,0,Inf) %>% logistic
+
+c(0,0.5,1) %>% logistic_inv
+
+```
+
+
+## German Credit Model
+
+Using the GermanCredit data from the **Caret** package/ UCI Machine Learning Library, create a model for `Class` ("Good" vs. "Bad" ). Show your model performance.  
+
+```{r}
+
+# fit everything
+fit.glm <- glm(Class ~ ., data = GermanCredit, family = 'binomial')
+summary(fit.glm)
+
+get_accuracy <- function(model) {
+        ytest <- model$y
+        preds <- round(model$fitted.values)
+        mean(ytest == preds)        
+}
+
+get_accuracy(fit.glm)
+# getting the in-sample accuracy
+
+# stepAIC( fit.glm, scope = ~ 1, direction = "backward" )
+# bestglm determined from stepAIC above...
+fit.glm.backward <- glm(formula = Class ~ Duration + Amount + InstallmentRatePercentage + 
+    Age + ForeignWorker + CheckingAccountStatus.lt.0 + CheckingAccountStatus.0.to.200 + 
+    CheckingAccountStatus.gt.200 + CreditHistory.NoCredit.AllPaid + 
+    CreditHistory.ThisBank.AllPaid + CreditHistory.PaidDuly + 
+    CreditHistory.Delay + Purpose.NewCar + Purpose.Furniture.Equipment + 
+    Purpose.Radio.Television + Purpose.Repairs + Purpose.Education + 
+    Purpose.Business + SavingsAccountBonds.lt.100 + SavingsAccountBonds.100.to.500 + 
+    EmploymentDuration.4.to.7 + Personal.Male.Single + OtherDebtorsGuarantors.None + 
+    OtherDebtorsGuarantors.CoApplicant + OtherInstallmentPlans.Bank + 
+    Housing.Rent, family = "binomial", data = GermanCredit)
+
+#stepAIC(fit.naive, scope = ~ 1 + Duration + Amount + InstallmentRatePercentage + ResidenceDuration + Age + NumberExistingCredits + NumberPeopleMaintenance + Telephone + ForeignWorker + Class + CheckingAccountStatus.lt.0 + CheckingAccountStatus.0.to.200 + CheckingAccountStatus.gt.200 + CheckingAccountStatus.none + CreditHistory.NoCredit.AllPaid + CreditHistory.ThisBank.AllPaid + CreditHistory.PaidDuly + CreditHistory.Delay + CreditHistory.Critical + Purpose.NewCar + Purpose.UsedCar + Purpose.Furniture.Equipment + Purpose.Radio.Television + Purpose.DomesticAppliance + Purpose.Repairs + Purpose.Education + Purpose.Vacation + Purpose.Retraining + Purpose.Business + Purpose.Other + SavingsAccountBonds.lt.100 + SavingsAccountBonds.100.to.500 + SavingsAccountBonds.500.to.1000 + SavingsAccountBonds.gt.1000 + SavingsAccountBonds.Unknown + EmploymentDuration.lt.1 + EmploymentDuration.1.to.4 + EmploymentDuration.4.to.7 + EmploymentDuration.gt.7 + EmploymentDuration.Unemployed + Personal.Male.Divorced.Seperated + Personal.Female.NotSingle + Personal.Male.Single + Personal.Male.Married.Widowed + Personal.Female.Single + OtherDebtorsGuarantors.None + OtherDebtorsGuarantors.CoApplicant + OtherDebtorsGuarantors.Guarantor + Property.RealEstate + Property.Insurance + Property.CarOther + Property.Unknown + OtherInstallmentPlans.Bank + OtherInstallmentPlans.Stores + OtherInstallmentPlans.None + Housing.Rent + Housing.Own + Housing.ForFree + Job.UnemployedUnskilled + Job.UnskilledResident + Job.SkilledEmployee + Job.Management.SelfEmp.HighlyQualified, direction = 'forward')
+
+fit.glm.forward <- glm(formula = Class ~ CheckingAccountStatus.none + Duration + 
+    CreditHistory.Critical + SavingsAccountBonds.lt.100 + Purpose.NewCar + 
+    OtherDebtorsGuarantors.Guarantor + OtherInstallmentPlans.None + 
+    Personal.Male.Single + InstallmentRatePercentage + CheckingAccountStatus.gt.200 + 
+    Purpose.Education + EmploymentDuration.4.to.7 + Housing.Rent + 
+    Purpose.UsedCar + Amount + SavingsAccountBonds.100.to.500 + 
+    CreditHistory.ThisBank.AllPaid + ForeignWorker + CheckingAccountStatus.lt.0 + 
+    CreditHistory.NoCredit.AllPaid + Telephone + Age + Property.Unknown, 
+    family = "binomial", data = GermanCredit)
+
+get_accuracy(fit.glm.forward)
+get_accuracy(fit.glm.backward)
+
+```
+
+
+
+## Iterative Correlated Feature Removal 
+
+- Implement Kuhn's iterative feature removal function described in **APM** Section 3.5, page 47
+
+
+
+## Synthetic Data (Optional)
+
+Sometimes it is useful to "synthesize" feature data for to understand how a certain model behaves. 
+Sythesize the following features 1000-element vectors: 
+
+- x1: a normally distributed variable with `mean = 20` and standard deviation = 20 (`sd=8`).
+- x2: a log-normally distributed feature with `meanlog = 1`, `sdlog=1.2`
+- x3: a uniformly distributed feature with `min=0` and `max=50`. 
+
+```{r}
+nsamples = 1000
+
+x1 <- rnorm(nsamples,20,20)  
+x2 <- rlnorm(nsamples, meanlog=1, sdlog = 1.2)
+x3 <- runif(nsamples,0,50)
+
+```
+
+Next synthesis a response, `y` using the betas provided and an intercept that is normally distributed at 20 with standard deviation of 2. (**Hint:**  The betas thought of can be a vector or matrix)
+
+
+
+```{r}
+
+beta0 <- rnorm(nsamples, mean = 20, sd = 2)  # intercept!
+beta1 <- 2.3
+beta2 <- 4
+beta3 <- 7
+
+betas <- matrix( c(2.5, 4, 7), nrow=1  )  # 1x4 matrix
+
+# x0 <- rep(1,nsamples) 
+
+X  <- cbind(x1,x2,x3)  # 1000x4
+
+y <- betas %*% t(X) %>% t
+y <- y + beta0
+
+qplot(y)
+dat <- data.frame(y,X)
+
+fit <- lm( y ~ . , dat )
+
+coef(fit)
+
+fit
+```
+
+- Did you recover the betas? 
+
+my output:
+(Intercept)          x1          x2          x3 
+  20.144228    2.498734    3.998037    6.993073 
+compare to:
+betas
+     [,1] [,2] [,3]
+[1,]  2.5    4    7
+
+- Is the model good?
+
+depends what the application is...
+But seems pretty good, judging from the summary(fit):
+all coefficients are found to be highly significant, and the R-Squared is > .999
+
+- What happens if increase the value of `nsamples`? Decrease it?
+
+- What transformations would you apply to x1? x2? x3? 
+

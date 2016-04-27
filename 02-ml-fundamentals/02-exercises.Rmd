@@ -12,7 +12,11 @@ Note: The following will set-up your environment for this exercise. If you get a
 
 ```{r,echo=FALSE}
 
+<<<<<<< HEAD
 packs <-  c('AppliedPredictiveModeling', 'ggplot2', 'magrittr', 'dplyr', 'magrittr')
+=======
+packs <-  c('AppliedPredictiveModeling', 'ggplot2', 'magrittr', 'dplyr')
+>>>>>>> 556966077518c2e2067944796437a9e3521a7b46
 
 for( nm in packs ) { 
   # message(nm)
@@ -22,7 +26,11 @@ for( nm in packs ) {
 
 # Load data set into environment
 data(FuelEconomy)
+<<<<<<< HEAD
 #>?? ... = NULL  # Needed for aesthetics 
+=======
+... = NULL  # Needed for aesthetics 
+>>>>>>> 556966077518c2e2067944796437a9e3521a7b46
 
 ```
 
@@ -36,7 +44,11 @@ Hint: See `?cars2010`
 - After the **Fuel Economy** data is loaded, combine three data sets into one data set. (Note: The name `dat` is very often used in these situations, `data` is a reserved R word.)  
 
 ```{r}
+<<<<<<< HEAD
 dat <- rbind(cars2010, cars2011, cars2012)    # Define 
+=======
+dat <- bind_rows( cars2010, cars2011, cars2012)    # Define 
+>>>>>>> 556966077518c2e2067944796437a9e3521a7b46
 ```
 
 
@@ -50,7 +62,11 @@ naive_guess <- mean(dat$FE)
 - plot FE (Fuel Econonomy) vs. EngDisp. Plot the naive guess.
 
 ```{r}
+<<<<<<< HEAD
 qplot( y=dat$FE, x=dat$EngDispl ) + geom_hline(yintercept=naive_guess, color="red")
+=======
+# ... ggplot2  
+>>>>>>> 556966077518c2e2067944796437a9e3521a7b46
 ```
 
 - Sample 10 observations from `dat`
@@ -62,12 +78,20 @@ qplot( y=dat$FE, x=dat$EngDispl ) + geom_hline(yintercept=naive_guess, color="re
 set.seed(314) 
 
 # Sample 
+<<<<<<< HEAD
 samp <- dat %>% sample_n(10)
 # to explicitly specify function package also can:
 # dplyr::sample_n  
 
 # Plots 
 qplot(y = samp$FE, x = samp$EngDispl) + geom_hline(yintercept = naive_guess, color = 'red')
+=======
+samp <- dat %>% dplyr::sample_n(10) 
+
+# Plots 
+...
+
+>>>>>>> 556966077518c2e2067944796437a9e3521a7b46
 
 ```
 
@@ -86,6 +110,7 @@ All functions should accept two arguments:
 ```{r}
 
 rmse <- function(y,yhat) {
+<<<<<<< HEAD
 return ((y - yhat)^2 %>% mean %>% sqrt)
 }
 
@@ -95,6 +120,17 @@ return ((y - yhat) %>% abs %>% mean)
 
 medae <- function(y, yhat) { 
 return ((y - yhat) %>% median)
+=======
+  ( y - yhat )^2  %>% mean   %>% sqrt 
+}
+
+mae <- function(y, yhat) {
+  # ...
+}
+
+medae <- function(y, yhat) { 
+  # ...
+>>>>>>> 556966077518c2e2067944796437a9e3521a7b46
 }
 
 ```
@@ -102,6 +138,7 @@ return ((y - yhat) %>% median)
 Use these functions to evaluate the loss/performance of:
 - the naive guess
 
+<<<<<<< HEAD
 ```{r}
 y <- samp$FE
 yhat <- naive_guess
@@ -109,6 +146,9 @@ paste('RMSE naive:', format(round(rmse(y,yhat), 2), nsmall = 2))
 paste('MAE naive:', format(round(mae(y,yhat), 2), nsmall = 2))
 paste('MEDAE naive:', format(round(medae(y,yhat), 2), nsmall = 2))
 ```
+=======
+
+>>>>>>> 556966077518c2e2067944796437a9e3521a7b46
 
 ## Exercise 3: Linear Model and Model Performance 
 
@@ -116,7 +156,11 @@ paste('MEDAE naive:', format(round(medae(y,yhat), 2), nsmall = 2))
 
 
 ```{r}
+<<<<<<< HEAD
 fit.2010 <- lm(FE ~ EngDispl, data = cars2010)
+=======
+fit.2010 <- ... 
+>>>>>>> 556966077518c2e2067944796437a9e3521a7b46
 ```
 
 - Use your functions to evaluate the training error
@@ -126,6 +170,7 @@ fit.2010 <- lm(FE ~ EngDispl, data = cars2010)
 
 ```{r}
 
+<<<<<<< HEAD
 y.2010 <- predict(fit.2010, newdata=cars2010)
 y.2011 <- fit.2010 %>% predict(cars2011) 
 # newdata=, not data = , otherwise creates preds for 2010 still:
@@ -135,11 +180,24 @@ y.2012 <- fit.2010 %>% predict(cars2012)
 rmse.2010 <- rmse(cars2010$FE, y.2010)
 rmse.2011 <- rmse(cars2011$FE, y.2011)
 rmse.2012 <- rmse(cars2012$FE, y.2012)
+=======
+y.2010 <- ... 
+y.2011 <- ... 
+y.2012 <- ...
+
+rmse.2010 <- ...
+rmse.2011 <- ...
+rmse.2012 <- ... 
+>>>>>>> 556966077518c2e2067944796437a9e3521a7b46
 
 ```
 
 
+<<<<<<< HEAD
 ```{r, echo=TRUE}
+=======
+```{r}
+>>>>>>> 556966077518c2e2067944796437a9e3521a7b46
 # DO NOT EDIT 
 rmse.2010 
 rmse.2011
@@ -154,6 +212,7 @@ rmse.2012
 
 
 ```{r}
+<<<<<<< HEAD
 fit.multivar <- lm(FE ~ EngDispl + NumCyl + VarValveLift, data = cars2011)
 summary(fit.multivar)
 # kill VarValveLift - insignificant predictor. replace with VarValveTiming:
@@ -161,4 +220,8 @@ fit.multivar <- lm(FE ~ EngDispl + NumCyl + VarValveTiming, data = cars2011)
 summary(fit.multivar)
 betas <- fit.multivar$coefficients
 print(betas)
+=======
+fit.2010 <- ...
+betas <- ...
+>>>>>>> 556966077518c2e2067944796437a9e3521a7b46
 ```
