@@ -1,7 +1,7 @@
 ---
 title: "03-exercises"
 author: "Jeff Larson"
-date: "April 20, 2016"
+date: "April 27, 2016"
 output: html_document
 ---
 
@@ -11,13 +11,6 @@ output: html_document
 
 - Chapter 4 "Over Fitting and Model Tuning"
 - Chapter 12.2 "Logisitic Regression""
-
-
-## Miscellaneous
-
-I am still struggling with names ...
-
-- Please send me your picture
 
 
 ## Assignment 
@@ -34,13 +27,6 @@ for( nm in packs ) {
   if( ! nm  %in% installed.packages()[,1]  ) install.packages(nm)
   library(nm, character.only = TRUE)
 }
-
-# Load data set into environment
-data(FuelEconomy)     # See ?cars2010
-fe <- dplyr::bind_rows(cars2010, cars2011, cars2012)    # Define Da
-
-
-data("GermanCredit")  # see GermanCredit
 
 ... = NULL  # Needed for aesthetics 
 
@@ -74,19 +60,21 @@ summary(fit.fe)
 fit.simple <- lm( FE ~ 1, data=fe )
 
 # fit forward stepAIC
-fit.forward <- stepAIC(fit.simple, scope = form , direction = "forward")
+fit.forward <- stepAIC(fit.simple, scope = form, direction = "forward")
 summary(fit.forward)
 
 # fit backward
-fit.fe.backward <- stepAIC(fit.fe, scope = FE ~ 1, direction="backward")
+fit.fe.backward <- stepAIC(fit.fe, scope = FE ~ 1, direction = "backward")
 summary(fit.fe.backward)
 ```
 
 - Are they the same model? If not why?  Which is better?
 
-No, the forward stepwise fit has 41 predictors and adj. R^2 about .8138, fit backward has 44 predictors and adj. R^2 of .8141
+No.
+The forward stepwise fit has 41 predictors, adj. R^2 = .8138
+The backward stepwise fit has 44 predictors and adj. R^2 of .8141
 
-The better is probably the simpler one, considering very similar R^2 metrics, but the real decision of model selection would be after cross-validating the models.
+The better is probably the simpler one, considering very similar R^2 metrics, but the real decision of model selection would be made by cross-validating the models.
 
 
 ## Logsitic and Inverse Logistic Transformation 
@@ -137,23 +125,22 @@ c(0,0.5,1) %>% logistic_inv
 Using the GermanCredit data from the **Caret** package/ UCI Machine Learning Library, create a model for `Class` ("Good" vs. "Bad" ). Show your model performance.  
 
 ```{r}
+# load data
+data("GermanCredit")
 
-# fit everything
+# fit everything into logistical model
 fit.glm <- glm(Class ~ ., data = GermanCredit, family = 'binomial')
 summary(fit.glm)
 
+# define function to compute in-sample accuracy:
 get_accuracy <- function(model) {
         ytest <- model$y
         preds <- round(model$fitted.values)
         mean(ytest == preds)        
 }
 
-get_accuracy(fit.glm)
-# getting the in-sample accuracy
-
-# stepAIC( fit.glm, scope = ~ 1, direction = "backward" )
-# bestglm determined from stepAIC above...
-fit.glm.backward <- glm(formula = Class ~ Duration + Amount + InstallmentRatePercentage + 
+# define full formula
+form <- Class ~ Duration + Amount + InstallmentRatePercentage + 
     Age + ForeignWorker + CheckingAccountStatus.lt.0 + CheckingAccountStatus.0.to.200 + 
     CheckingAccountStatus.gt.200 + CreditHistory.NoCredit.AllPaid + 
     CreditHistory.ThisBank.AllPaid + CreditHistory.PaidDuly + 
@@ -162,23 +149,18 @@ fit.glm.backward <- glm(formula = Class ~ Duration + Amount + InstallmentRatePer
     Purpose.Business + SavingsAccountBonds.lt.100 + SavingsAccountBonds.100.to.500 + 
     EmploymentDuration.4.to.7 + Personal.Male.Single + OtherDebtorsGuarantors.None + 
     OtherDebtorsGuarantors.CoApplicant + OtherInstallmentPlans.Bank + 
-    Housing.Rent, family = "binomial", data = GermanCredit)
+    Housing.Rent
 
-#stepAIC(fit.naive, scope = ~ 1 + Duration + Amount + InstallmentRatePercentage + ResidenceDuration + Age + NumberExistingCredits + NumberPeopleMaintenance + Telephone + ForeignWorker + Class + CheckingAccountStatus.lt.0 + CheckingAccountStatus.0.to.200 + CheckingAccountStatus.gt.200 + CheckingAccountStatus.none + CreditHistory.NoCredit.AllPaid + CreditHistory.ThisBank.AllPaid + CreditHistory.PaidDuly + CreditHistory.Delay + CreditHistory.Critical + Purpose.NewCar + Purpose.UsedCar + Purpose.Furniture.Equipment + Purpose.Radio.Television + Purpose.DomesticAppliance + Purpose.Repairs + Purpose.Education + Purpose.Vacation + Purpose.Retraining + Purpose.Business + Purpose.Other + SavingsAccountBonds.lt.100 + SavingsAccountBonds.100.to.500 + SavingsAccountBonds.500.to.1000 + SavingsAccountBonds.gt.1000 + SavingsAccountBonds.Unknown + EmploymentDuration.lt.1 + EmploymentDuration.1.to.4 + EmploymentDuration.4.to.7 + EmploymentDuration.gt.7 + EmploymentDuration.Unemployed + Personal.Male.Divorced.Seperated + Personal.Female.NotSingle + Personal.Male.Single + Personal.Male.Married.Widowed + Personal.Female.Single + OtherDebtorsGuarantors.None + OtherDebtorsGuarantors.CoApplicant + OtherDebtorsGuarantors.Guarantor + Property.RealEstate + Property.Insurance + Property.CarOther + Property.Unknown + OtherInstallmentPlans.Bank + OtherInstallmentPlans.Stores + OtherInstallmentPlans.None + Housing.Rent + Housing.Own + Housing.ForFree + Job.UnemployedUnskilled + Job.UnskilledResident + Job.SkilledEmployee + Job.Management.SelfEmp.HighlyQualified, direction = 'forward')
+# bestglm determined from stepAIC above...
+fit.glm.backward <- stepAIC(fit.glm, scope = Class ~ 1, direction = 'backward')
 
-fit.glm.forward <- glm(formula = Class ~ CheckingAccountStatus.none + Duration + 
-    CreditHistory.Critical + SavingsAccountBonds.lt.100 + Purpose.NewCar + 
-    OtherDebtorsGuarantors.Guarantor + OtherInstallmentPlans.None + 
-    Personal.Male.Single + InstallmentRatePercentage + CheckingAccountStatus.gt.200 + 
-    Purpose.Education + EmploymentDuration.4.to.7 + Housing.Rent + 
-    Purpose.UsedCar + Amount + SavingsAccountBonds.100.to.500 + 
-    CreditHistory.ThisBank.AllPaid + ForeignWorker + CheckingAccountStatus.lt.0 + 
-    CreditHistory.NoCredit.AllPaid + Telephone + Age + Property.Unknown, 
-    family = "binomial", data = GermanCredit)
+fit.glm.naive <- glm(Class ~ 1, data = GermanCredit, family = 'binomial')
+fit.glm.forward <- stepAIC(fit.glm.naive, scope = form, direction = 'forward')
 
+get_accuracy(fit.glm.naive)
 get_accuracy(fit.glm.forward)
 get_accuracy(fit.glm.backward)
-
+get_accuracy(fit.glm)
 ```
 
 
@@ -255,5 +237,25 @@ all coefficients are found to be highly significant, and the R-Squared is > .999
 
 - What happens if increase the value of `nsamples`? Decrease it?
 
+nsamples = 10,000
+more precise model fit coefficients
+Coefficients:
+(Intercept)           x1           x2           x3  
+     19.956        2.501        4.000        7.000  
+     
+nsamples = 100
+less precise model fit of coefficients
+Coefficients:
+(Intercept)           x1           x2           x3  
+     19.946        2.504        4.032        6.990  
+
 - What transformations would you apply to x1? x2? x3? 
+ 
+To get normally distributed predictor variables..
+x1: center at 0 and scale to sd = 1
+        scale(x1)
+x2: natural log and center to 0:
+    log(x2) - 1
+x3: box-Mueller transform?
+        ??
 
